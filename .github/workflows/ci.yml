@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.10", "3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install package
+        run: python -m pip install --upgrade pip && pip install -e .
+
+      - name: Run test suite
+        run: python -m unittest discover -s tests -v
+
+      - name: Smoke-test the MCP stdio transport (POSIX)
+        if: runner.os == 'Linux'
+        run: |
+          printf '%s\n' \
+            '{"jsonrpc":"2.0","id":1,"method":"initialize"}' \
+            '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' \
+            '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"generate_reference_box","arguments":{"out_path":"ci_box.stl"}}}' \
+            | mcp-spatial-critic > ci_responses.jsonl
+          python - <<'PY'
+          import json, pathlib
+          lines = pathlib.Path("ci_responses.jsonl").read_text(encoding="utf-8").splitlines()
+          assert len(lines) == 3, lines
+          responses = [json.loads(line) for line in lines]
+          report = json.loads(responses[2]["result"]["content"][0]["text"])
+          assert report["approved"] is True, report
+          assert report["critic_score"] == 10.0, report
+          print("stdio round-trip OK")
+          PY
+
+      - name: Smoke-test the MCP stdio transport (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $requests = @(
+            '{"jsonrpc":"2.0","id":1,"method":"initialize"}',
+            '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"generate_reference_box","arguments":{"out_path":"ci_box.stl"}}}'
+          ) -join "`n"
+          $responses = $requests | mcp-spatial-critic
+          $report = ($responses | ConvertFrom-Json)[1].result.content[0].text | ConvertFrom-Json
+          if (-not $report.approved) { throw "CI box was not approved: $responses" }
+          Write-Host "stdio round-trip OK"
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install build
+      - run: python -m build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/*

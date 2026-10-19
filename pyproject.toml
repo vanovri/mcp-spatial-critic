@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mcp-spatial-critic"
+version = "0.1.0"
+description = "Model Context Protocol server and deterministic STL manifold / 3D-printing tolerance critic for headless Blender and OpenSCAD agents."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Ardhya Novri Ramadhan" }]
+requires-python = ">=3.10"
+keywords = ["mcp", "model-context-protocol", "cad", "openscad", "blender", "stl", "3d-printing", "ai-agents"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Software Development :: Quality Assurance",
+]
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["build>=1.2", "twine>=5.0", "pytest>=8.0"]
+
+[project.scripts]
+mcp-spatial-critic = "mcp_spatial_critic.server:main"
+
+[project.urls]
+Homepage = "https://github.com/vanovri/mcp-spatial-critic"
+Repository = "https://github.com/vanovri/mcp-spatial-critic"
+Issues = "https://github.com/vanovri/mcp-spatial-critic/issues"
+
+[tool.setuptools]
+packages = ["mcp_spatial_critic"]
