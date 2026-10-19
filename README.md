@@ -52,6 +52,10 @@ is the gate.
 ## Install
 
 ```bash
+# from GitHub — works today
+pip install git+https://github.com/vanovri/mcp-spatial-critic
+
+# or a checkout you can hack on
 git clone https://github.com/vanovri/mcp-spatial-critic
 cd mcp-spatial-critic
 pip install -e .
